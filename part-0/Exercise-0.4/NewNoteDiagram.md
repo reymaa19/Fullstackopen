@@ -1,8 +1,8 @@
 ```mermaid
 sequenceDiagram
+    participant user
     participant browser
     participant server
-    participant user
 
     user-->>browser: creates a new note on the page by writing something in to the text field
     user-->>browser: clicks the save button
