@@ -3,6 +3,18 @@ import axios from 'axios'
 import personService from './services/persons'
 // I moved some event handlers and states from the App root component to their own separate components.
 
+const Notification = ({ message }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className='error' style={{color: message.includes('removed') ? 'red' : 'green'}}>
+      {message}
+    </div>
+  )
+}
+
 const Filter = ({ handleSearch }) => {
   const [search, setSearch] = useState('')
 
@@ -71,6 +83,7 @@ const App = () => {
   const [persons, setPersons] = useState([]) 
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
       personService.getAll().then(allPersons => setPersons(allPersons))
@@ -79,11 +92,22 @@ const App = () => {
   const handleAddPerson = (newPerson) => {
     personService.addPerson(newPerson)
       .then(addedPerson => setPersons((prevPersons) => [...prevPersons, addedPerson]))
+    setErrorMessage(`Added ${newPerson.name}`)
+    setTimeout(() => {
+      setErrorMessage(null)
+    }, 5000)
   }
 
   const changeNumber = (changedPerson) => {
    personService.changeNumber(changedPerson)
     .then(cp => setPersons(persons.map(person => person.id !== cp.id ? person : cp)))
+    .catch(() => {
+      setErrorMessage(`Information of ${changedPerson.name} has already been removed from server`)
+      setTimeout(() => {
+        personService.getAll().then(allPersons => setPersons(allPersons))
+        setErrorMessage(null)
+      }, 5000)      
+    })
   }
 
   const deletePerson = (id) => {
@@ -101,6 +125,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errorMessage} />
       <Filter handleSearch={findSearchResults}/>
       <PersonForm 
         persons={persons} 
