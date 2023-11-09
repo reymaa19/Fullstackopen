@@ -105,4 +105,26 @@ test('blog without url is not added', async () => {
   expect(blogsAfter).toHaveLength(initialBlogs.length)
 })
 
+test('deleting a blog succeeds with status code 204', async () => {
+  const blogsBefore = await blogsInDb()
+  const blogToDelete = blogsBefore[0]
+
+  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+
+  const blogsAfter = await blogsInDb()
+
+  expect(blogsAfter).toHaveLength(initialBlogs.length - 1)
+
+  expect(blogsAfter.map((b) => b)).not.toContain(blogToDelete)
+})
+
+test('updating an individual blog increases likes', async () => {
+  const blogs = await blogsInDb()
+  const blogToUpdate = blogs[0]
+
+  const response = await api.put(`/api/blogs/${blogToUpdate.id}`)
+
+  expect(response.body.likes).toBe(blogToUpdate.likes + 1)
+})
+
 afterAll(async () => await mongoose.connection.close())
