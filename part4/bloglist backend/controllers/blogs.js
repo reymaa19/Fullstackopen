@@ -1,6 +1,7 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const { userExtractor } = require('../utils/middleware')
 
 const isValidToken = (request) => {
   if (!request.user)
@@ -8,7 +9,6 @@ const isValidToken = (request) => {
 }
 
 blogsRouter.get('/', async (request, response) => {
-  isValidToken(request)
   const blogs = await Blog.find({}).populate('user', {
     username: 1,
     name: 1,
@@ -18,7 +18,7 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', userExtractor, async (request, response) => {
   isValidToken(request)
   const blog = new Blog(request.body)
   blog.user = request.user
@@ -33,7 +33,7 @@ blogsRouter.post('/', async (request, response) => {
   response.status(201).json(savedBlog)
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
+blogsRouter.delete('/:id', userExtractor, async (request, response) => {
   isValidToken(request)
   const blog = await Blog.findById(request.params.id)
 
@@ -43,7 +43,7 @@ blogsRouter.delete('/:id', async (request, response) => {
   response.status(204).end()
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', userExtractor, async (request, response) => {
   isValidToken(request)
   let blogToUpdate = await Blog.findById(request.params.id)
 
