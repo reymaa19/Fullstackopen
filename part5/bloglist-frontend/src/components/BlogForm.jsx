@@ -7,9 +7,9 @@ const BlogForm = ({ createBlog }) => {
     setNewBlog({ ...newBlog, [e.target.name]: e.target.value })
   }
 
-  const addBlog = (e) => {
+  const addBlog = async (e) => {
     e.preventDefault()
-    createBlog(newBlog)
+    await createBlog(newBlog)
     setNewBlog({ title: '', author: '', url: '' })
   }
 

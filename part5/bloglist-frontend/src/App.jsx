@@ -87,7 +87,12 @@ const App = () => {
     else return 0
   })
 
-  const handleRemoveBlog = (blog) => setBlogs(blogs.filter((b) => b != blog))
+  const handleRemoveBlog = async (blog) => {
+    await blogService.removeBlog(blog.id)
+    setBlogs(blogs.filter((b) => b != blog))
+  }
+
+  const handleLikeBlog = async (id) => await blogService.likeBlog(id)
 
   return (
     <div>
@@ -106,7 +111,12 @@ const App = () => {
           </Togglable>
 
           {sortedByLikes.map((blog) => (
-            <Blog key={blog.id} blog={blog} removeBlog={handleRemoveBlog} />
+            <Blog
+              key={blog.id}
+              blog={blog}
+              removeBlog={handleRemoveBlog}
+              likeBlog={handleLikeBlog}
+            />
           ))}
         </>
       )}
