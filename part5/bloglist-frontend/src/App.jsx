@@ -59,6 +59,7 @@ const App = () => {
     setNotification(newNotification)
     setError(newError)
     setTimeout(() => {
+      if (newNotification == 'token expired') handleLogout()
       setNotification(null)
       setError(false)
     }, 5000)
@@ -88,11 +89,23 @@ const App = () => {
   })
 
   const handleRemoveBlog = async (blog) => {
-    await blogService.removeBlog(blog.id)
-    setBlogs(blogs.filter((b) => b != blog))
+    try {
+      await blogService.removeBlog(blog.id)
+      setBlogs(blogs.filter((b) => b != blog))
+    } catch (error) {
+      handleNotificationChange(error.response.data.error, true)
+    }
   }
 
-  const handleLikeBlog = async (id) => await blogService.likeBlog(id)
+  const handleLikeBlog = async (id) => {
+    try {
+      await blogService.likeBlog(id)
+      return true
+    } catch (error) {
+      handleNotificationChange(error.response.data.error, true)
+      return false
+    }
+  }
 
   return (
     <div>
@@ -106,7 +119,7 @@ const App = () => {
             logged in as {user.name}{' '}
             <button onClick={handleLogout}>logout</button>
           </p>
-          <Togglable buttonLabel={'new note'} ref={blogFormRef}>
+          <Togglable buttonLabel={'new blog'} ref={blogFormRef}>
             <BlogForm createBlog={createBlog} />
           </Togglable>
 
@@ -116,6 +129,7 @@ const App = () => {
               blog={blog}
               removeBlog={handleRemoveBlog}
               likeBlog={handleLikeBlog}
+              loggedUser={user}
             />
           ))}
         </>
