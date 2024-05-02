@@ -78,10 +78,10 @@ const typeDefs = `
 `
 
 const _addAuthor = async (_, args) => {
-  const author = new Author({ name: args.author })
-
   try {
+    const author = new Author({ name: args.author })
     await author.save()
+    return author
   } catch (error) {
     throw new GraphQLError('Saving author failed', {
       extensions: {
@@ -91,22 +91,14 @@ const _addAuthor = async (_, args) => {
       },
     })
   }
-
-  return author
 }
 
 const findAuthor = async (name) => {
   try {
-    const books = await Book.find({})
-    const author = await Author.findOne({ name })
-    return books
-      .filter((b) => b.author.toString() == author._id.toString())
-      .map((fb) => {
-        fb.author = author
-        return fb
-      })
+    const books = await Book.find({}).populate('author')
+    return books.filter((b) => b.author.name == name)
   } catch (error) {
-    throw new GraphQLError('Finding authors failed', {
+    throw new GraphQLError('Finding author failed', {
       extensions: {
         code: 'NOT_FOUND',
         invalidArgs: name,
@@ -118,10 +110,7 @@ const findAuthor = async (name) => {
 
 const findGenre = async (genre) => {
   try {
-    const books = await Book.find({
-      genres: genre,
-    })
-
+    const books = await Book.find({ genres: genre }).populate('author')
     return books
   } catch (error) {
     throw new GraphQLError('Finding genre failed', {
@@ -134,34 +123,23 @@ const findGenre = async (genre) => {
   }
 }
 
+// ********************
+// LEFT OFF ON 8.18
+// ********************
 const resolvers = {
   Query: {
-    me: (root, args, context) => {
-      return context.currentUser
-    },
-    bookCount: async () => {
-      const books = await Book.find({})
-      return books.length
-    },
-    authorCount: async () => {
-      const authors = await Author.find({})
-      return authors.length
-    },
+    me: (root, args, context) => context.currentUser,
+    bookCount: async () => Book.collection.countDocuments(),
+    authorCount: async () => Author.collection.countDocuments(),
+    allAuthors: async () => Author.find({}),
     allBooks: async (root, args) => {
       if (args.author != null && args.genre != null) {
-        const foundAuthors = await findAuthor(args.author)
-        const foundGenres = await findGenre(args.genre)
-        return foundAuthors.concat(foundGenres)
+        const foundAuthor = await findAuthor(args.author)
+        const foundGenre = await findGenre(args.genre)
+        return foundAuthor.concat(foundGenre) // This returns duplicates
       } else if (args.author != null) return findAuthor(args.author)
       else if (args.genre != null) return findGenre(args.genre)
-      else {
-        const books = await Book.find({})
-        return books
-      }
-    },
-    allAuthors: async () => {
-      const authors = await Authors.find({})
-      return authors
+      else return Book.find({}).populate('author')
     },
   },
   Author: {
@@ -189,7 +167,7 @@ const resolvers = {
       // *******************
       // HARD CODED PASSWORD
       // *******************
-      if (!user || args.password !== 'secret') {
+      if (!user || args.password !== '123321') {
         throw new GraphQLError('wrong credentials', {
           extensions: {
             code: 'BAD_USER_INPUT',
