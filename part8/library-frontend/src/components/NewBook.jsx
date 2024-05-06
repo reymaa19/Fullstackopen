@@ -11,10 +11,10 @@ const NewBook = ({ show }) => {
 
   const [createBook] = useMutation(CREATE_BOOK, {
     refetchQueries: [{ query: ALL_BOOKS }],
-    // onError: (error) => {
-    //   const messages = error.graphQLErrors.map((e) => e.message).join('\n')
-    //   setError(messages)
-    // },
+    onError: (error) => {
+      const messages = error.graphQLErrors.map((e) => e.message).join('\n')
+      console.log(messages)
+    },
   })
 
   if (!show) return null
