@@ -1,7 +1,9 @@
 import express from "express";
 import bmiCalculator from "./bmiCalculator";
+import { exerciseNumbers } from "./exerciseCalculator";
 
 const app = express();
+app.use(express.json());
 
 const PORT = 3003;
 
@@ -30,9 +32,20 @@ app.get("/bmi", (req, res) => {
                 });
             }
         } catch (e) {
+            console.log(e);
             res.status(500).json({ error: "calculation failed" });
         }
     }
+});
+
+app.post("/exercises", (req, res) => {
+    const numbers = { hours: req.body.daily_exercises, target: req.body.target } as exerciseNumbers;
+    console.log(daily_exercises);
+    console.log(target);
+
+    //const result = exerciseCalculator(daily_exercises, target);
+    //console.log("result: ", result);
+    res.send("yes");
 });
 
 app.listen(PORT, () => {
