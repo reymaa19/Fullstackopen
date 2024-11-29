@@ -1,6 +1,6 @@
 import express from "express";
 import bmiCalculator from "./bmiCalculator";
-import { exerciseNumbers } from "./exerciseCalculator";
+import exerciseCalculator from "./exerciseCalculator";
 
 const app = express();
 app.use(express.json());
@@ -39,13 +39,18 @@ app.get("/bmi", (req, res) => {
 });
 
 app.post("/exercises", (req, res) => {
-    const numbers = { hours: req.body.daily_exercises, target: req.body.target } as exerciseNumbers;
-    console.log(daily_exercises);
-    console.log(target);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { daily_exercises, target }: { daily_exercises: number[]; target: number } = req.body;
 
-    //const result = exerciseCalculator(daily_exercises, target);
-    //console.log("result: ", result);
-    res.send("yes");
+    if (!target || !daily_exercises) {
+        res.status(400).json({ error: "parameters missing" });
+    } else if (isNaN(Number(target)) || !Array.isArray(daily_exercises)) {
+        res.status(400).json({ error: "malformatted parameters" });
+    }
+
+    const result = exerciseCalculator(daily_exercises, target);
+
+    res.status(200).json(result);
 });
 
 app.listen(PORT, () => {
