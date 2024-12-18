@@ -61,6 +61,8 @@ const toNewDiaryEntry = (object: unknown): NewDiaryEntry => {
             date: parseDate(object.date),
             comment: parseComment(object.comment),
         };
+
+        return newEntry;
     }
 
     console.log(object);
@@ -69,4 +71,3 @@ const toNewDiaryEntry = (object: unknown): NewDiaryEntry => {
 };
 
 export default toNewDiaryEntry;
-

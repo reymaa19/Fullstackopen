@@ -1,7 +1,13 @@
 import express, { Response, Request, NextFunction } from "express";
 import patientService from "../services/patientService";
-import { NonSensitivePatient, Patient, NewPatient } from "../types";
-import { NewPatientSchema } from "../utils";
+import { NonSensitivePatient, Patient, NewPatient, EntryWithoutId, Entry, EntryType } from "../types";
+import {
+    NewPatientSchema,
+    NewEntrySchema,
+    NewHealthCheckEntrySchema,
+    NewOccupationalHealthcareEntry,
+    NewHospitalEntry,
+} from "../utils";
 import { z } from "zod";
 
 const router = express.Router();
@@ -13,6 +19,30 @@ router.get("/", (_req, res: Response<NonSensitivePatient[]>) => {
 const newPatientParser = (req: Request, _res: Response, next: NextFunction) => {
     try {
         NewPatientSchema.parse(req.body);
+        next();
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
+const newEntryParser = (req: Request, _res: Response, next: NextFunction) => {
+    try {
+        const parsedEntry = NewEntrySchema.parse(req.body);
+
+        switch (parsedEntry.type) {
+            case EntryType.HealthCheck:
+                NewHealthCheckEntrySchema.parse(req.body);
+                break;
+            case EntryType.Hospital:
+                NewHospitalEntry.parse(req.body);
+                break;
+            case EntryType.OccupationalHealthcare:
+                NewOccupationalHealthcareEntry.parse(req.body);
+                break;
+            default:
+                throw new Error("Invalid entry type");
+        }
+
         next();
     } catch (error: unknown) {
         next(error);
@@ -45,6 +75,15 @@ router.get("/:id", (req, res: Response<Patient | ErrorMessage>) => {
         res.status(200).json(foundPatient);
     }
 });
+
+router.post(
+    "/:id/entries",
+    newEntryParser,
+    (req: Request<{ id: string }, unknown, EntryWithoutId>, res: Response<Entry | ErrorMessage>) => {
+        const addedEntry = patientService.addEntry(req.params.id, req.body);
+        res.status(201).json(addedEntry);
+    },
+);
 
 router.use(errorMiddleware);
 

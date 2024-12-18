@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Patient, PatientFormValues } from "../types";
+import { EntryWithoutId, Patient, PatientFormValues, Entry } from "../types";
 
 import { apiBaseUrl } from "../constants";
 
@@ -20,8 +20,22 @@ async function getPatient(id: string): Promise<Patient> {
     return data;
 }
 
+async function addEntry(id: string, newEntry: EntryWithoutId): Promise<Entry | { error: string[] | string }> {
+    try {
+        const { data } = await axios.post<Entry>(`${apiBaseUrl}/patients/${id}/entries`, newEntry);
+        return data;
+    } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response) {
+            return { error: e.response.data };
+        } else {
+            return { error: "An unknown error occurred" };
+        }
+    }
+}
+
 export default {
     getAll,
     create,
     getPatient,
+    addEntry,
 };
